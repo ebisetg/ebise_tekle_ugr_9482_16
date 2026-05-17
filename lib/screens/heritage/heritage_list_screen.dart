@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../../providers/heritage_provider.dart';
 import '../../widgets/heritage_card.dart';
 import '../../widgets/loading_widget.dart';
@@ -18,6 +19,7 @@ class _HeritageListScreenState extends State<HeritageListScreen> {
   @override
   void initState() {
     super.initState();
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<HeritageProvider>().loadItems();
     });
@@ -28,12 +30,28 @@ class _HeritageListScreenState extends State<HeritageListScreen> {
     return Consumer<HeritageProvider>(
       builder: (context, provider, _) {
         return Scaffold(
-          appBar: AppBar(title: const Text('Cultural Heritage')),
+          appBar: AppBar(
+            title: const Text(
+              'Cultural Heritage',
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+
           body: _buildBody(provider),
+
           floatingActionButton: FloatingActionButton.extended(
-            onPressed: () => Navigator.pushNamed(context, RouteNames.add),
+            elevation: 4,
+            onPressed: () {
+              Navigator.pushNamed(context, RouteNames.add);
+            },
             icon: const Icon(Icons.add),
-            label: const Text('Add Heritage'),
+            label: const Text(
+              'Add Heritage',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
           ),
         );
       },
@@ -44,29 +62,38 @@ class _HeritageListScreenState extends State<HeritageListScreen> {
     if (provider.isLoading && provider.items.isEmpty) {
       return const LoadingWidget();
     }
+
     if (provider.error != null && provider.items.isEmpty) {
       return ErrorWidgetApp(
         message: provider.error!,
         onRetry: () => provider.loadItems(),
       );
     }
+
     if (provider.items.isEmpty) {
       return const EmptyStateWidget();
     }
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: provider.items.length,
-      itemBuilder: (context, index) {
-        final item = provider.items[index];
-        return HeritageCard(
-          item: item,
-          onTap: () => Navigator.pushNamed(
-            context,
-            RouteNames.detail,
-            arguments: item.id,
-          ),
-        );
-      },
+
+    return RefreshIndicator(
+      onRefresh: () => provider.loadItems(),
+      child: ListView.builder(
+        padding: const EdgeInsets.fromLTRB(16, 10, 16, 100),
+        itemCount: provider.items.length,
+        itemBuilder: (context, index) {
+          final item = provider.items[index];
+
+          return HeritageCard(
+            item: item,
+            onTap: () {
+              Navigator.pushNamed(
+                context,
+                RouteNames.detail,
+                arguments: item.id,
+              );
+            },
+          );
+        },
+      ),
     );
   }
 }
